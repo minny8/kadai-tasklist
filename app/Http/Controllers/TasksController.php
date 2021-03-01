@@ -68,11 +68,14 @@ class TasksController extends Controller
     public function show($id)
     {
         $user = \Auth::user();
-        $task = $user->tasks()->findOrFail($id);
-
-        return view('tasks.show', [
+        $task = Task::find($id); 
+        if(\Auth::id() == $task->user_id){
+            return view('tasks.show', [
             'task' => $task,
-        ]);
+            ]);
+        } else {
+            return redirect('/');
+        }
     }
 
     /**
@@ -84,10 +87,14 @@ class TasksController extends Controller
     public function edit($id)
     {
         $user = \Auth::user();
-        $task = $user->tasks()->findOrFail($id); 
-        return view('tasks.edit', [
-            'task' => $task,
-        ]);
+        $task = Task::find($id); 
+        if(\Auth::id() == $task->user_id){
+            return view('tasks.edit', [
+                'task' => $task,
+            ]);
+        } else {
+            return redirect('/');
+        }
     }
 
     /**
@@ -103,14 +110,17 @@ class TasksController extends Controller
             'content' => 'required|max:255',
             'status' => 'required|max:10',  
         ]);
+        
         $user = \Auth::user();
-        $task = $user->tasks()->findOrFail($id); 
-        $task->content = $request->content;
-        $task->status = $request-> status;
-        $task->save();
-
+        $task = Task::find($id); 
+        if(\Auth::id() == $task->user_id){
+            $task->content = $request->content;
+            $task->status = $request-> status;
+            $task->save();
+        }
         // トップページへリダイレクトさせる
         return redirect('/');
+        
     }
 
     /**
@@ -122,10 +132,10 @@ class TasksController extends Controller
     public function destroy($id)
     {
         $user = \Auth::user();
-        $task = $user->tasks()->findOrFail($id); 
-        
-        $task->delete();
-
+        $task = Task::find($id); 
+        if(\Auth::id() == $task->user_id){
+            $task->delete();
+        }
         // トップページへリダイレクトさせる
         return redirect('/');
     }
