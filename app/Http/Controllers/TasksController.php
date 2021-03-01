@@ -8,16 +8,16 @@ use App\Task;    // 追加
 
 class TasksController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        
-        $tasks = Task::all();
-
+        $tasks = "";
+        if (\Auth::check()) {
+            // 認証済みユーザを取得
+            $user = \Auth::user();
+            // ユーザの投稿の一覧を作成日時の降順で取得
+            // （後のChapterで他ユーザの投稿も取得するように変更しますが、現時点ではこのユーザの投稿のみ取得します）
+            $tasks = $user->tasks()->orderBy('created_at')->paginate(10);
+        }
         
         return view('tasks.index', [
             'tasks' => $tasks,
@@ -49,10 +49,11 @@ class TasksController extends Controller
             'content' => 'required|max:255',
             'status' => 'required|max:10',  
         ]);
-        $task = new Task;
-        $task->content = $request->content;
-        $task->status = $request-> status;
-        $task->save();
+        
+        $request->user()->tasks()->create([
+            'content' => $request->content,
+            'status' => $request->status,
+        ]);
 
         // トップページへリダイレクトさせる
         return redirect('/');
@@ -66,10 +67,9 @@ class TasksController extends Controller
      */
     public function show($id)
     {
-        
-        $task = Task::findOrFail($id);
+        $user = \Auth::user();
+        $task = $user->tasks()->findOrFail($id);
 
-        
         return view('tasks.show', [
             'task' => $task,
         ]);
@@ -83,7 +83,8 @@ class TasksController extends Controller
      */
     public function edit($id)
     {
-        $task = Task::findOrFail($id);
+        $user = \Auth::user();
+        $task = $user->tasks()->findOrFail($id); 
         return view('tasks.edit', [
             'task' => $task,
         ]);
@@ -102,8 +103,8 @@ class TasksController extends Controller
             'content' => 'required|max:255',
             'status' => 'required|max:10',  
         ]);
-        
-        $task = Task::findOrFail($id);
+        $user = \Auth::user();
+        $task = $user->tasks()->findOrFail($id); 
         $task->content = $request->content;
         $task->status = $request-> status;
         $task->save();
@@ -120,8 +121,8 @@ class TasksController extends Controller
      */
     public function destroy($id)
     {
-        
-        $task = Task::findOrFail($id);
+        $user = \Auth::user();
+        $task = $user->tasks()->findOrFail($id); 
         
         $task->delete();
 
